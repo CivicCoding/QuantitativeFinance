@@ -11,26 +11,36 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
+	"io"
 	"net/http"
 	"os"
 )
 
+type base struct {
+	url       string
+	apiKey    string
+	secretKey string
+}
+
 func HandleResponse(resp *http.Response) string {
-	buf := make([]byte, 1024)
-	n, err := resp.Body.Read(buf)
+	// TODO: 此处会引发性能问题需要未来优化
+	b, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Something wrong with HandleResponse", err)
 		os.Exit(1)
 	}
-	return string(buf[:n])
+
+	s := string(b[:])
+	return s
 }
 
-func HandleRequest(method string, url string, apiKey string) string {
+// HandleRequest 处理请求
+func HandleRequest(method, url, apiKey string) string {
 	req, err := http.NewRequest(method, url, nil)
 	req.Header.Add("X-MBX-APIKEY", apiKey)
 
 	if err != nil {
-		color.Red("Something wrong with accountSnapshot", err)
+		color.Red("Something wrong", err)
 		os.Exit(1)
 	}
 	resp, err := http.DefaultClient.Do(req)
