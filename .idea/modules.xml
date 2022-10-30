@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/BinanceApi.iml" filepath="$PROJECT_DIR$/.idea/BinanceApi.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../QuantitativeFinanceInGo/.idea/QuantitativeFinanceInGo.iml" filepath="$PROJECT_DIR$/../QuantitativeFinanceInGo/.idea/QuantitativeFinanceInGo.iml" />
     </modules>
   </component>
 </project>

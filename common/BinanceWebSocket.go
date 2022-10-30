@@ -35,7 +35,7 @@ func Client(streamName string) {
 	*/
 	socketUrl := "wss://stream.binance.com:9443/ws/" + streamName
 	conn, _, err := websocket.DefaultDialer.Dial(socketUrl, nil)
-
+	// string to json
 	if err != nil {
 		color.Red("Error connecting to Websocket Server:", err)
 	}
@@ -51,6 +51,8 @@ func Client(streamName string) {
 				return
 			}
 			fmt.Printf("messageType:%d,message:%s", msgType, p)
+		case <-time.After(time.Duration(5) * time.Minute):
+			conn.PongHandler()
 		case <-interrupt:
 			// We received a SIGINT (Ctrl + C). Terminate gracefully...
 			log.Println("Received SIGINT interrupt signal. Closing all pending connections")

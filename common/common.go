@@ -59,6 +59,14 @@ func JsonStringToStruct(s string, stru interface{}) {
 	}
 }
 
+func StringToJson(s string) []byte {
+	b, err := json.Marshal(s)
+	if err != nil {
+		color.Red("StringToJson:", err)
+	}
+	return b
+}
+
 // HmacSha256 为 secretKey 加密 其他参数(除了 SecretKey 以外的参数)作为 HmacSha256 的操作对象
 func HmacSha256(secretKey string, params string) string {
 	h := hmac.New(sha256.New, []byte(secretKey))
