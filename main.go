@@ -1,17 +1,11 @@
 package main
 
 import (
-	"BinanceApi/dbService"
-	_ "BinanceApi/dbService"
-	"fmt"
+	"QuantitativeFinance/setting"
 	"github.com/jinzhu/gorm"
+	"log"
 	"time"
 )
-
-const baseURL = "https://api.binance.com"
-
-const secretKey = "91IW45xj7g8GCEjtYMievrfR0n7sFUO0mQWKiSL0R3HYi7p6RwxRChmXapex2z5R"
-const apiKey = "zQDyK5C0dQcymyim7y3jyDLGj6rYQqNqfpDffEL8Ojw1uhzgHkf95hPIkNl9e1UX"
 
 type User struct {
 	Id       uint   `gorm:"AUTO_INCREMENT"`
@@ -30,11 +24,9 @@ type person struct {
 }
 
 func main() {
-
-	var pp []person
-	dbService.DB.Find(&pp)
-	fmt.Println(pp)
-
+	log.Println("Hello, api 正在启动中...")
+	setting.SetUp()
+	log.Println(setting.AppSetting.Url)
 	//dbService.CreateTable(&User{})
 	//dbService.DeleteTable("students")
 

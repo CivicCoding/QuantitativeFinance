@@ -16,12 +16,7 @@ import (
 	"os"
 )
 
-type base struct {
-	url       string
-	apiKey    string
-	secretKey string
-}
-
+// HandleResponse 处理响应
 func HandleResponse(resp *http.Response) string {
 	// TODO: 此处会引发性能问题需要未来优化
 	b, err := io.ReadAll(resp.Body)

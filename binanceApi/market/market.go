@@ -1,7 +1,7 @@
 package market
 
 import (
-	"BinanceApi/common"
+	"QuantitativeFinance/binanceApi/common"
 	"github.com/fatih/color"
 	"net/http"
 	"os"
@@ -124,4 +124,22 @@ func Kline(baseUrl string, symbol string) *[]kline {
 	}
 
 	return &klines
+}
+
+// Depth 获取深度数据 /api/v3/depth
+func Depth(baseUrl string, pair string) string {
+	resp, err := http.Get(baseUrl + "/api/v3/depth" + "?symbol=" + pair)
+	if err != nil {
+		color.Red("Depth:", err)
+	}
+	return common.HandleResponse(resp)
+}
+
+// AvgPrice 获取币对当前均价 /api/v3/avgPrice
+func AvgPrice(baseUrl string, pair string) string {
+	resp, err := http.Get(baseUrl + "/api/v3/avgPrice" + "?symbol=" + pair)
+	if err != nil {
+		color.Red("average", err)
+	}
+	return common.HandleResponse(resp)
 }

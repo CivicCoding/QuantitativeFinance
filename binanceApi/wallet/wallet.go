@@ -1,8 +1,8 @@
 package wallet
 
 import (
-	"BinanceApi/common"
-	"BinanceApi/market"
+	"QuantitativeFinance/binanceApi/common"
+	"QuantitativeFinance/binanceApi/market"
 	"fmt"
 	"github.com/fatih/color"
 	"net/http"

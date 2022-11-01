@@ -1,9 +1,10 @@
-module BinanceApi
+module QuantitativeFinance
 
 go 1.19
 
 require (
 	github.com/fatih/color v1.13.0 // indirect
+	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/jinzhu/gorm v1.9.16 // indirect

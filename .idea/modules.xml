@@ -2,8 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/BinanceApi.iml" filepath="$PROJECT_DIR$/.idea/BinanceApi.iml" />
-      <module fileurl="file://$PROJECT_DIR$/../QuantitativeFinanceInGo/.idea/QuantitativeFinanceInGo.iml" filepath="$PROJECT_DIR$/../QuantitativeFinanceInGo/.idea/QuantitativeFinanceInGo.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../QuantitativeFinance/.idea/QuantitativeFinance.iml" filepath="$PROJECT_DIR$/../QuantitativeFinance/.idea/QuantitativeFinance.iml" />
     </modules>
   </component>
 </project>
