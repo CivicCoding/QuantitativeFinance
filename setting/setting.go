@@ -27,7 +27,7 @@ var DataBaseSetting = &DataBase{}
 func SetUp() {
 	Cfg, err := ini.Load("app.ini") //加载配置文件ini
 	if err != nil {
-		color.Red("ini load err:", err)
+		color.Red("Cfg加载配置文件ini app.ini 错误:", err)
 	}
 	//映射配置
 	err = Cfg.Section("app").MapTo(AppSetting)
