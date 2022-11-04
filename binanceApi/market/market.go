@@ -135,6 +135,11 @@ func Depth(baseUrl string, pair string) string {
 	return common.HandleResponse(resp)
 }
 
+type avgPrice struct {
+	Mins  int    `json:"mins"`
+	Price string `json:"price"`
+}
+
 // AvgPrice 获取币对当前均价 /api/v3/avgPrice
 func AvgPrice(baseUrl string, pair string) string {
 	resp, err := http.Get(baseUrl + "/api/v3/avgPrice" + "?symbol=" + pair)

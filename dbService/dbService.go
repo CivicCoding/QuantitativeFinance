@@ -5,6 +5,7 @@
 package dbService
 
 import (
+	"QuantitativeFinance/setting"
 	"github.com/fatih/color"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -16,7 +17,7 @@ func initDB() (err error) {
 	// "user:password@tcp(127.0.0.1:3306)/hello"
 	dsn := "root:JXlwj5831@tcp(127.0.0.1:3306)/data_analysis?charset=utf8&parseTime=True&loc=Local"
 	// 不会校验密码是否正确
-	DB, err = gorm.Open("mysql", dsn)
+	DB, err = gorm.Open(setting.DataBaseSetting.Type, dsn)
 	defer DB.Close()
 	if err != nil {
 		return err

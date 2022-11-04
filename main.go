@@ -1,6 +1,7 @@
 package main
 
 import (
+	"QuantitativeFinance/binanceApi/wallet"
 	"QuantitativeFinance/setting"
 	"github.com/jinzhu/gorm"
 	"log"
@@ -25,9 +26,14 @@ type person struct {
 
 func main() {
 	log.Println("Hello, api 正在启动中...")
-	setting.SetUp()
+	setting.SetUp("app")
 	log.Println(setting.AppSetting.Url)
-	//dbService.CreateTable(&User{})
-	//dbService.DeleteTable("students")
-
+	//wallet.AccountSnapshot("SPOT", "7")
+	wallet.TradeFee("BTCBUSD")
+	//configInfo := url2.Values{}
+	//configInfo.Add("recvWindow", "5000")
+	//configInfo.Add("timestamp", "16689757")
+	//configInfo.Add("signature", "signature")
+	////data := configInfo.Encode()
+	//fmt.Println(configInfo)
 }
