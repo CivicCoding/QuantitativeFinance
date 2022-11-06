@@ -1,8 +1,9 @@
 package main
 
 import (
-	"QuantitativeFinance/binanceApi/wallet"
+	"QuantitativeFinance/binanceApi/market"
 	"QuantitativeFinance/setting"
+	"fmt"
 	"github.com/jinzhu/gorm"
 	"log"
 	"time"
@@ -28,12 +29,6 @@ func main() {
 	log.Println("Hello, api 正在启动中...")
 	setting.SetUp("app")
 	log.Println(setting.AppSetting.Url)
-	//wallet.AccountSnapshot("SPOT", "7")
-	wallet.TradeFee("BTCBUSD")
-	//configInfo := url2.Values{}
-	//configInfo.Add("recvWindow", "5000")
-	//configInfo.Add("timestamp", "16689757")
-	//configInfo.Add("signature", "signature")
-	////data := configInfo.Encode()
-	//fmt.Println(configInfo)
+	data := market.BookTicker("BNBBUSD")
+	fmt.Println(data)
 }

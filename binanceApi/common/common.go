@@ -106,6 +106,7 @@ func (r *RequestFunc) GetN(url string) string {
 	return res
 }
 
+// GetA 需要APIKey鉴权
 func (r *RequestFunc) GetA(url string) string {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
@@ -121,8 +122,12 @@ func (r *RequestFunc) GetA(url string) string {
 	return res
 }
 
+// Post rewrite http.Post function
 func (r *RequestFunc) Post(url string, body io.Reader) string {
-	resp, err := http.Post(url, "application/x-www-form-urlencoded", body)
+	req, err := http.NewRequest("POST", url, body)
+	req.Header.Add("X-MBX-APIKEY", setting.AppSetting.ApiKey)
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		log.Fatalln(err)
 	}

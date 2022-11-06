@@ -1,10 +1,16 @@
+// Package market
+/*
+行情接口
+*/
 package market
 
 import (
 	"QuantitativeFinance/binanceApi/common"
-	"github.com/fatih/color"
+	"QuantitativeFinance/setting"
+	"fmt"
+	"log"
 	"net/http"
-	"os"
+	url2 "net/url"
 	"strings"
 )
 
@@ -12,22 +18,26 @@ type timeS struct {
 	ServerTime int `json:"ServerTime"`
 }
 
-// ServerTime 获取Binance服务器时间 api/v3/time
-func ServerTime(baseUrl string) int {
-	resp, err := http.Get(baseUrl + "/api/v3/time")
-	if err != nil {
-		color.Red("Something wrong with time \n", err)
-		os.Exit(1)
-	}
-	defer resp.Body.Close()
-
-	s := common.HandleResponse(resp)
+// ServerTime 获取Binance服务器时间 /api/v3/time
+func ServerTime() int {
+	var r common.RequestFunc
+	s := r.GetN(setting.AppSetting.Url + "/api/v3/time")
 
 	var t timeS
 
 	common.JsonStringToStruct(s, &t)
 
 	return t.ServerTime
+}
+
+// ExchangeInfo 获取交易规则和交易对信息 /api/v3/exchangeInfo
+func ExchangeInfo(symbol string) string {
+	url := setting.AppSetting.Url + "/api/v3/exchangeInfo"
+	configInfo := url2.Values{}
+	configInfo.Add("symbol", symbol)
+	data := configInfo.Encode()
+	var r common.RequestFunc
+	return r.GetN(url + data)
 }
 
 type kline struct {
@@ -69,15 +79,8 @@ response:
 */
 func Kline(baseUrl string, symbol string) *[]kline {
 	url := baseUrl + "/api/v3/klines" + "?symbol=" + symbol + "&interval=" + "1h" + "&limit=500"
-	resp, err := http.Get(url)
-	if err != nil {
-		color.Red("Something wrong with kline:\n", err)
-		os.Exit(1)
-	}
-	defer resp.Body.Close()
-
-	res := common.HandleResponse(resp)
-
+	var r common.RequestFunc
+	res := r.GetN(url)
 	// step1 : create a string slice to store response
 	var data []string
 	// step2 : remove "," and "[]"
@@ -127,24 +130,76 @@ func Kline(baseUrl string, symbol string) *[]kline {
 }
 
 // Depth 获取深度数据 /api/v3/depth
-func Depth(baseUrl string, pair string) string {
-	resp, err := http.Get(baseUrl + "/api/v3/depth" + "?symbol=" + pair)
-	if err != nil {
-		color.Red("Depth:", err)
-	}
-	return common.HandleResponse(resp)
+func Depth(pair string) string {
+	url := setting.AppSetting.Url + "/api/v3/depth" + "?symbol=" + pair
+	var r common.RequestFunc
+	return r.GetN(url)
 }
 
-type avgPrice struct {
+type AvgPriceInfo struct {
 	Mins  int    `json:"mins"`
 	Price string `json:"price"`
 }
 
 // AvgPrice 获取币对当前均价 /api/v3/avgPrice
-func AvgPrice(baseUrl string, pair string) string {
-	resp, err := http.Get(baseUrl + "/api/v3/avgPrice" + "?symbol=" + pair)
+func AvgPrice(pair string) AvgPriceInfo {
+	url := setting.AppSetting.Url + "/api/v3/avgPrice" + "?symbol=" + pair
+	var r common.RequestFunc
+	var a AvgPriceInfo
+	res := r.GetN(url)
+	common.JsonStringToStruct(res, &a)
+	return a
+}
+
+type LatestPrice struct {
+	Symbol string `json:"symbol"`
+	Price  string `json:"price"`
+}
+
+// Price 最新价格 /api/v3/ticker/price
+func Price(symbol string) LatestPrice {
+	url := setting.AppSetting.Url + "/api/v3/ticker/price"
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		color.Red("average", err)
+		fmt.Println(err)
 	}
-	return common.HandleResponse(resp)
+	q := req.URL.Query()
+	q.Add("symbol", symbol)
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		fmt.Println(err)
+	}
+	res := common.HandleResponse(resp)
+	var p LatestPrice
+	common.JsonStringToStruct(res, &p)
+	return p
+}
+
+type BookTickerInfo struct {
+	Symbol   string `json:"symbol"`
+	BidPrice string `json:"bidPrice"`
+	BidQty   string `json:"bidQty"`
+	AskPrice string `json:"askPrice"`
+	AskQty   string `json:"askQty"`
+}
+
+// BookTicker 返回当前最优卖单 /api/v3/ticker/bookTicker
+func BookTicker(symbol string) BookTickerInfo {
+	url := setting.AppSetting.Url + "/api/v3/ticker/bookTicker"
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	q := req.URL.Query()
+	q.Add("symbol", symbol)
+	req.URL.RawQuery = q.Encode()
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	var b BookTickerInfo
+	res := common.HandleResponse(resp)
+	common.JsonStringToStruct(res, &b)
+	return b
 }
