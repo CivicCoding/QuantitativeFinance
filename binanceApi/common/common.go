@@ -122,7 +122,7 @@ func (r *RequestFunc) GetA(url string) string {
 	return res
 }
 
-// Post rewrite http.Post function
+// Post rewrite http.Post function restrict Content-Type
 func (r *RequestFunc) Post(url string, body io.Reader) string {
 	req, err := http.NewRequest("POST", url, body)
 	req.Header.Add("X-MBX-APIKEY", setting.AppSetting.ApiKey)

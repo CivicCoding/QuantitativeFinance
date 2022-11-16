@@ -1,9 +1,8 @@
 package main
 
 import (
-	"QuantitativeFinance/binanceApi/market"
 	"QuantitativeFinance/setting"
-	"fmt"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"log"
 	"time"
@@ -29,6 +28,17 @@ func main() {
 	log.Println("Hello, api 正在启动中...")
 	setting.SetUp("app")
 	log.Println(setting.AppSetting.Url)
-	data := market.BookTicker("BNBBUSD")
-	fmt.Println(data)
+	log.Println("初始化数据库")
+
+	//l, _ := time.LoadLocation("Asia/ShangHai")
+	//t := time.Date(1998, 12, 22, 1, 12, 22, 0, l)
+	//u := User{
+	//	Id:       1,
+	//	Name:     "lcw",
+	//	Age:      10,
+	//	Birthday: &t,
+	//	Email:    "12@163.com",
+	//	PassWord: "123",
+	//}
+
 }

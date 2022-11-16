@@ -6,12 +6,15 @@ package market
 
 import (
 	"QuantitativeFinance/binanceApi/common"
+	"QuantitativeFinance/model"
 	"QuantitativeFinance/setting"
 	"fmt"
 	"log"
 	"net/http"
 	url2 "net/url"
+	"strconv"
 	"strings"
+	"time"
 )
 
 type timeS struct {
@@ -40,24 +43,9 @@ func ExchangeInfo(symbol string) string {
 	return r.GetN(url + data)
 }
 
-type kline struct {
-	OpeningTime   string // k线开盘时间
-	OpeningPrice  string // 开盘价
-	HighestPrice  string // 最高价
-	LowestPrice   string // 最低价
-	ClosingPrice  string // 收盘价
-	Volume        string // 成交量
-	ClosingTime   string // k线收盘时间
-	Turnover      string // 成交额
-	NumOfTrans    string // 成交笔数
-	ActiveBuyVol  string // 主动买入成交量
-	ActiveBuyTurn string // 主动买入成交额
-	ignore        string // 忽略该参数
-}
-
 // Kline
 /*
-获取指定币对的k线数据
+获取指定币对的k线数据 symbol 表示币对比如"BTCBUSD",interval 表示k线的时间间隔。
 
 response:
 [
@@ -77,8 +65,8 @@ response:
 	  ]
 ]
 */
-func Kline(baseUrl string, symbol string) *[]kline {
-	url := baseUrl + "/api/v3/klines" + "?symbol=" + symbol + "&interval=" + "1h" + "&limit=500"
+func Kline(symbol, interval string) *[]model.Kline {
+	url := setting.AppSetting.Url + "/api/v3/klines" + "?symbol=" + symbol + "&interval=" + interval + "&limit=500"
 	var r common.RequestFunc
 	res := r.GetN(url)
 	// step1 : create a string slice to store response
@@ -92,13 +80,16 @@ func Kline(baseUrl string, symbol string) *[]kline {
 
 	// step3 : append elem to slice of kline struct
 
-	var kl kline
-	var klines []kline
+	var kl model.Kline
+	var klines []model.Kline
 
 	for i := 0; i < len(data); i++ {
 		switch {
 		case i%12 == 0:
-			kl.OpeningTime = data[i]
+			t, _ := strconv.ParseInt(data[i], 10, 64)
+
+			kl.OpeningTime = time.UnixMilli(t)
+
 		case i%12 == 1:
 			kl.OpeningPrice = data[i]
 		case i%12 == 2:
@@ -110,7 +101,8 @@ func Kline(baseUrl string, symbol string) *[]kline {
 		case i%12 == 5:
 			kl.Volume = data[i]
 		case i%12 == 6:
-			kl.ClosingTime = data[i]
+			t, _ := strconv.ParseInt(data[i], 10, 64)
+			kl.ClosingTime = time.UnixMilli(t)
 		case i%12 == 7:
 			kl.Turnover = data[i]
 		case i%12 == 8:
@@ -120,13 +112,12 @@ func Kline(baseUrl string, symbol string) *[]kline {
 		case i%12 == 10:
 			kl.ActiveBuyTurn = data[i]
 		case i%12 == 11:
-			kl.ignore = data[i]
+			kl.Ignore = data[i]
 			klines = append(klines, kl)
 		}
-
 	}
-
 	return &klines
+
 }
 
 // Depth 获取深度数据 /api/v3/depth
@@ -184,7 +175,7 @@ type BookTickerInfo struct {
 	AskQty   string `json:"askQty"`
 }
 
-// BookTicker 返回当前最优卖单 /api/v3/ticker/bookTicker
+// BookTicker 返回当前最优挂单 /api/v3/ticker/bookTicker
 func BookTicker(symbol string) BookTickerInfo {
 	url := setting.AppSetting.Url + "/api/v3/ticker/bookTicker"
 	req, err := http.NewRequest("GET", url, nil)

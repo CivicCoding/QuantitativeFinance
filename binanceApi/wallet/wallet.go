@@ -64,6 +64,31 @@ func AccountSnapshot(kind string, days string) {
 	color.Green("%+v", ab)
 }
 
+type Asset struct {
+	Asset        string `json:"asset"`
+	Free         string `json:"free"`
+	Locked       string `json:"locked"`
+	Freeze       string `json:"freeze"`
+	Withdrawing  string `json:"withdrawing"`
+	BtcValuation string `json:"btcValuation"`
+}
+
+// GetFundingAsset /sapi/v1/asset/get-funding-asset
+func GetFundingAsset(asset string) Asset {
+	timeStamp := strconv.Itoa(market.ServerTime())
+	var r common.RequestFunc
+	config := url2.Values{}
+	config.Add("asset", asset)
+	config.Add("timestamp", timeStamp)
+	config.Add("needBtcValuation", "false")
+	params := config.Encode()
+	url := setting.AppSetting.Url + "/sapi/v1/asset/get-funding-asset"
+	a := r.Post(url, strings.NewReader(params))
+	var as Asset
+	common.JsonStringToStruct(a, &as)
+	return as
+}
+
 /*
 GetAll 获取所有币信息 /sapi/v1/capital/config/getall
 获取针对用户的所有(Binance支持充提操作的)币种信息
