@@ -1,6 +1,7 @@
 package main
 
 import (
+	"QuantitativeFinance/dbService"
 	"QuantitativeFinance/setting"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
@@ -24,21 +25,21 @@ type person struct {
 	address string `gorm:"size:50"`
 }
 
+var DB *gorm.DB
+
 func main() {
 	log.Println("Hello, api 正在启动中...")
 	setting.SetUp("app")
-	log.Println(setting.AppSetting.Url)
-	log.Println("初始化数据库")
+	log.Println("使用的网络是：", setting.AppSetting.Url)
+	log.Println("初始化连接数据库")
+	DB = dbService.InitDB()
+	log.Println("初始化交易所数据...")
+	InitBinance()
 
-	//l, _ := time.LoadLocation("Asia/ShangHai")
-	//t := time.Date(1998, 12, 22, 1, 12, 22, 0, l)
-	//u := User{
-	//	Id:       1,
-	//	Name:     "lcw",
-	//	Age:      10,
-	//	Birthday: &t,
-	//	Email:    "12@163.com",
-	//	PassWord: "123",
-	//}
+}
 
+// InitBinance 初始化填充交易所数据
+func InitBinance() {
+	// 首次获取kline、首次获取价格、首次获取账户信息
+	// 测试下单等等
 }

@@ -4,7 +4,6 @@ import (
 	"QuantitativeFinance/binanceApi/common"
 	"QuantitativeFinance/binanceApi/market"
 	"QuantitativeFinance/setting"
-	"fmt"
 	"github.com/fatih/color"
 	"log"
 	url2 "net/url"
@@ -65,15 +64,15 @@ func AccountSnapshot(kind string, days string) {
 }
 
 type Asset struct {
-	Asset        string `json:"asset"`
-	Free         string `json:"free"`
-	Locked       string `json:"locked"`
-	Freeze       string `json:"freeze"`
-	Withdrawing  string `json:"withdrawing"`
-	BtcValuation string `json:"btcValuation"`
+	Asset        string `json:"asset"`        //
+	Free         string `json:"free"`         // 可用余额
+	Locked       string `json:"locked"`       // 锁定资金
+	Freeze       string `json:"freeze"`       // 冻结资金
+	Withdrawing  string `json:"withdrawing"`  // 提币
+	BtcValuation string `json:"btcValuation"` // btc估值
 }
 
-// GetFundingAsset /sapi/v1/asset/get-funding-asset
+// GetFundingAsset 资金账户 /sapi/v1/asset/get-funding-asset
 func GetFundingAsset(asset string) Asset {
 	timeStamp := strconv.Itoa(market.ServerTime())
 	var r common.RequestFunc
@@ -82,8 +81,11 @@ func GetFundingAsset(asset string) Asset {
 	config.Add("timestamp", timeStamp)
 	config.Add("needBtcValuation", "false")
 	params := config.Encode()
+	signature := common.HmacSha256(setting.AppSetting.SecreteKey, params)
+	config.Add("signature", signature)
+	data := config.Encode()
 	url := setting.AppSetting.Url + "/sapi/v1/asset/get-funding-asset"
-	a := r.Post(url, strings.NewReader(params))
+	a := r.Post(url, strings.NewReader(data))
 	var as Asset
 	common.JsonStringToStruct(a, &as)
 	return as
@@ -92,6 +94,7 @@ func GetFundingAsset(asset string) Asset {
 /*
 GetAll 获取所有币信息 /sapi/v1/capital/config/getall
 获取针对用户的所有(Binance支持充提操作的)币种信息
+TODO: 将此信息保存到数据库
 */
 func GetAll() {
 	timeStamp := strconv.Itoa(market.ServerTime())
@@ -144,12 +147,12 @@ func EnableFastWithdrawSwitch() {
 // TradeFeeInfo 交易费率信息
 type TradeFeeInfo struct {
 	Symbol          string `json:"symbol"`
-	MakerCommission string `json:"makerCommission"`
-	TakerCommission string `json:"takerCommission"`
+	MakerCommission string `json:"makerCommission"` //被动成交
+	TakerCommission string `json:"takerCommission"` //主动成交
 }
 
 // TradeFee 获取交易费率 /sapi/v1/asset/tradeFee
-func TradeFee(symbol string) {
+func TradeFee(symbol string) TradeFeeInfo {
 	timeStamp := strconv.Itoa(market.ServerTime())
 	param := "symbol=" + symbol + "&recvWindow=5000" + "&timestamp=" + timeStamp
 	signature := common.HmacSha256(setting.AppSetting.SecreteKey, param)
@@ -159,7 +162,7 @@ func TradeFee(symbol string) {
 	res := r.GetA(url)
 	var td TradeFeeInfo
 	common.JsonStringToStruct(res, &td)
-	fmt.Printf("%+v\n%s", td, res)
+	return td
 }
 
 // GetUserAsset [POST] 获取用户持仓，仅返回>0的数据。 /sapi/v3/asset/getUserAsset
