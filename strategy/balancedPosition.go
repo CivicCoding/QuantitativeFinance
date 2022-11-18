@@ -2,12 +2,22 @@ package strategy
 
 import (
 	"QuantitativeFinance/binanceApi/enum"
+	"QuantitativeFinance/binanceApi/market"
 	"QuantitativeFinance/binanceApi/spot"
 	"QuantitativeFinance/binanceApi/wallet"
 	"log"
+	"math"
 	"strconv"
-	"time"
 )
+
+// 账户余额 单位BUSD
+var accountBalance float64
+
+// 账户持仓 单位BUSD
+var latestPosition float64
+
+// 币对 example："BNBBUSD"
+var coinPair string
 
 /*
 BalancedPosition 均仓策略，50-50策略，也就是持仓和现金保持50:50比例的策略，
@@ -23,16 +33,65 @@ BalancedPosition 均仓策略，50-50策略，也就是持仓和现金保持50:5
 控制最小交易数量，也可以降低交易频率，增加抓取到更优点位的概率，从而提高收益。
 
 请注意，该策略是在现货市场对现价范围波动进行调仓。
+TODO: 将下单信息保存至数据库
 */
-func BalancedPosition(coinSymbol, cashSymbol string, adjustPositionTime time.Time) {
+func BalancedPosition(coin1, coin2 string) {
+	FirstBalancedPosition(coin1, coin2)
+	// step3 ：价格到达变动范围时调整仓位,循环到结束信号传入
+	for {
+		// 查询最新价格
+		latestPrice, err := strconv.ParseFloat(market.Price(coinPair).Price, 32)
+		if err != nil {
+			log.Println(err)
+		}
+		// 获取用户持币数量
+		u := wallet.GetUserAsset(coin1, false)
+		free, err := strconv.ParseFloat(u.Free, 32)
+		if err != nil {
+			log.Println(err)
+		}
+		//计算用户持仓
+		latestPosition = latestPrice * free
+		// step 4: 将持仓coin换算成cash多的取出来少的添进去
+		balancePosition(latestPrice, latestPosition, accountBalance, coinPair)
+	}
+}
+
+// FirstBalancedPosition 第一次对资产配置
+func FirstBalancedPosition(coin1, coin2 string) {
+
+	//币对
+	coinPair = coin1 + coin2
 	// step1 : 获取账户现金资产
-	asset := wallet.GetFundingAsset(cashSymbol)
+	asset := wallet.GetFundingAsset(coin2)
 	amount, err := strconv.ParseFloat(asset.Free, 64)
 	if err != nil {
 		log.Println(err)
 	}
-	price := strconv.FormatFloat(amount/2, 'e', 5, 32)
-	// step2 : 资产的一半用来购买symbol
-	spot.Order(coinSymbol+cashSymbol, enum.Order.Buy, enum.OrderTypes.LimitMaker, enum.TimeInForces.GTC, price)
-	// step3 ：到达指定的时间时调整仓位,循环
+
+	accountBalance = amount / 2
+
+	buyPrice := strconv.FormatFloat(accountBalance, 'e', 5, 32)
+	// step2 : 资产的一半用来购买coin1
+	spot.Order(coinPair, enum.Order.Buy, enum.OrderTypes.LimitMaker, enum.TimeInForces.GTC, buyPrice)
+}
+
+// balancePrice 平衡仓位 将持仓coin换算成cash多的取出来少的添进去
+func balancePosition(latestPrice, latestPosition, accountBalance float64, coinPair string) {
+	switch {
+	case latestPosition > accountBalance:
+		spot.OrderTest()
+		price := strconv.FormatFloat(calculatePrice(accountBalance, latestPosition, latestPrice), 'e', 5, 32)
+		spot.Order(coinPair, enum.Order.Sell, enum.OrderTypes.LimitMaker, enum.TimeInForces.GTC, price)
+	case latestPosition < accountBalance:
+		spot.OrderTest()
+		price := strconv.FormatFloat(calculatePrice(accountBalance, latestPosition, latestPrice), 'e', 5, 32)
+		// TODO: 应使用Trailing Stop 追踪止盈止损订单 https://github.com/binance/binance-spot-api-docs/blob/master/faqs/trailing-stop-faq-cn.md
+		spot.Order(coinPair, enum.Order.Buy, enum.OrderTypes.LimitMaker, enum.TimeInForces.GTC, price)
+	}
+}
+
+func calculatePrice(accountBalance, latestPosition, latestPrice float64) float64 {
+	delta := math.Abs(latestPosition - accountBalance)
+	return delta / 2
 }

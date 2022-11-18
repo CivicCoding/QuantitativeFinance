@@ -165,8 +165,18 @@ func TradeFee(symbol string) TradeFeeInfo {
 	return td
 }
 
+type UserAssetInfo struct {
+	Asset        string `json:"asset"`
+	Free         string `json:"free"`
+	Locked       string `json:"locked"`
+	Freeze       string `json:"freeze"`
+	Withdrawing  string `json:"withdrawing"`
+	Ipoable      string `json:"ipoable"`
+	BtcValuation string `json:"btcValuation"`
+}
+
 // GetUserAsset [POST] 获取用户持仓，仅返回>0的数据。 /sapi/v3/asset/getUserAsset
-func GetUserAsset(asset string, needBtcValuation bool) string {
+func GetUserAsset(asset string, needBtcValuation bool) UserAssetInfo {
 	timeStamp := strconv.Itoa(market.ServerTime())
 	baseUrl := setting.AppSetting.Url + "/sapi/v1/asset/tradeFee"
 	configInfo := url2.Values{}
@@ -174,8 +184,13 @@ func GetUserAsset(asset string, needBtcValuation bool) string {
 	configInfo.Add("needBtcValuation", strconv.FormatBool(needBtcValuation))
 	configInfo.Add("recvWindow", "5000")
 	configInfo.Add("timestamp", timeStamp)
+	params := configInfo.Encode()
+	signature := common.HmacSha256(setting.AppSetting.SecreteKey, params)
+	configInfo.Add("signature", signature)
 	data := configInfo.Encode()
 	var r common.RequestFunc
 	res := r.Post(baseUrl, strings.NewReader(data))
-	return res
+	var uAsset UserAssetInfo
+	common.JsonStringToStruct(res, uAsset)
+	return uAsset
 }
