@@ -38,6 +38,7 @@ TODO: 将下单信息保存至数据库
 func BalancedPosition(coin1, coin2 string) {
 	FirstBalancedPosition(coin1, coin2)
 	// step3 ：价格到达变动范围时调整仓位,循环到结束信号传入
+	// TODO: 设定到达一段时间后平衡仓位
 	for {
 		// 查询最新价格
 		latestPrice, err := strconv.ParseFloat(market.Price(coinPair).Price, 32)
@@ -68,30 +69,43 @@ func FirstBalancedPosition(coin1, coin2 string) {
 	if err != nil {
 		log.Println(err)
 	}
+	// 获取币种最新价格
+	latestPrice, err := strconv.ParseFloat(market.Price(coinPair).Price, 32)
+	if err != nil {
+		log.Println(err)
+	}
+	// 计算购买数量
+	quantity := strconv.FormatFloat(amount/2/latestPrice, 'e', 5, 32)
+	// 设置最新价格为限价
+	price := market.Price(coinPair).Price
+	//一般价格变动范围设置在手续费的4倍左右为基准开始调优较为合理
+	fee, _ := strconv.ParseFloat(wallet.TradeFee(coinPair).MakerCommission, 64)
+	trailingDelta := strconv.FormatFloat(fee*10000*4, 'e', 5, 32)
+	spot.TrailingDeltaOrder(coinPair, enum.Order.Buy, enum.OrderTypes.StopLossLimit, enum.TimeInForces.GTC, quantity, price, trailingDelta)
 
-	accountBalance = amount / 2
-
-	buyPrice := strconv.FormatFloat(accountBalance, 'e', 5, 32)
-	// step2 : 资产的一半用来购买coin1
-	spot.Order(coinPair, enum.Order.Buy, enum.OrderTypes.LimitMaker, enum.TimeInForces.GTC, buyPrice)
 }
 
 // balancePrice 平衡仓位 将持仓coin换算成cash多的取出来少的添进去
 func balancePosition(latestPrice, latestPosition, accountBalance float64, coinPair string) {
 	switch {
 	case latestPosition > accountBalance:
-		spot.OrderTest()
-		price := strconv.FormatFloat(calculatePrice(accountBalance, latestPosition, latestPrice), 'e', 5, 32)
-		spot.Order(coinPair, enum.Order.Sell, enum.OrderTypes.LimitMaker, enum.TimeInForces.GTC, price)
+		//spot.OrderTest()
+		price := market.Price(coinPair).Price
+		quantity := strconv.FormatFloat(calculateQuantity(accountBalance, latestPosition, latestPrice), 'e', 5, 32)
+		fee, _ := strconv.ParseFloat(wallet.TradeFee(coinPair).MakerCommission, 64)
+		trailingDelta := strconv.FormatFloat(fee*10000*4, 'e', 5, 32)
+		spot.TrailingDeltaOrder(coinPair, enum.Order.Sell, enum.OrderTypes.TakeProfitLimit, enum.TimeInForces.GTC, quantity, price, trailingDelta)
 	case latestPosition < accountBalance:
-		spot.OrderTest()
-		price := strconv.FormatFloat(calculatePrice(accountBalance, latestPosition, latestPrice), 'e', 5, 32)
-		// TODO: 应使用Trailing Stop 追踪止盈止损订单 https://github.com/binance/binance-spot-api-docs/blob/master/faqs/trailing-stop-faq-cn.md
-		spot.Order(coinPair, enum.Order.Buy, enum.OrderTypes.LimitMaker, enum.TimeInForces.GTC, price)
+		price := market.Price(coinPair).Price
+		quantity := strconv.FormatFloat(calculateQuantity(accountBalance, latestPosition, latestPrice), 'e', 5, 32)
+		fee, _ := strconv.ParseFloat(wallet.TradeFee(coinPair).MakerCommission, 64)
+		trailingDelta := strconv.FormatFloat(fee*10000*4, 'e', 5, 32)
+		spot.TrailingDeltaOrder(coinPair, enum.Order.Buy, enum.OrderTypes.StopLossLimit, enum.TimeInForces.GTC, quantity, price, trailingDelta)
 	}
 }
 
-func calculatePrice(accountBalance, latestPosition, latestPrice float64) float64 {
+// 换算数量
+func calculateQuantity(accountBalance, latestPosition, latestPrice float64) float64 {
 	delta := math.Abs(latestPosition - accountBalance)
-	return delta / 2
+	return delta / 2 / latestPrice
 }
