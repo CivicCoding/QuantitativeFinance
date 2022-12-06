@@ -1,7 +1,9 @@
 package main
 
 import (
+	"QuantitativeFinance/binanceApi/wallet"
 	"QuantitativeFinance/setting"
+	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
 	"log"
@@ -28,11 +30,13 @@ func main() {
 	log.Println("Hello, api 正在启动中...")
 	setting.SetUp("app")
 	log.Println("使用的网络是：", setting.AppSetting.Url)
-	log.Println("初始化连接数据库")
 	//DB = dbService.InitDB()
 	log.Println("初始化交易所数据...")
 	InitBinance()
-
+	//strategy.BalancedPosition("BNB", "BUSD")
+	u := wallet.GetUserAsset("BUSD", false)
+	s := wallet.GetFundingAsset("BUSD")
+	fmt.Println(u, s)
 }
 
 // InitBinance 初始化填充交易所数据

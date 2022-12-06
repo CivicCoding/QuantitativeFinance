@@ -5,9 +5,11 @@ import (
 	"QuantitativeFinance/binanceApi/market"
 	"QuantitativeFinance/binanceApi/spot"
 	"QuantitativeFinance/binanceApi/wallet"
+	"QuantitativeFinance/dbService"
 	"log"
 	"math"
 	"strconv"
+	"time"
 )
 
 // 账户余额 单位BUSD
@@ -18,6 +20,9 @@ var latestPosition float64
 
 // 币对 example："BNBBUSD"
 var coinPair string
+
+// 获取数据库连接
+var db = dbService.GetDB()
 
 /*
 BalancedPosition 均仓策略，50-50策略，也就是持仓和现金保持50:50比例的策略，
@@ -38,8 +43,10 @@ TODO: 将下单信息保存至数据库
 func BalancedPosition(coin1, coin2 string) {
 	FirstBalancedPosition(coin1, coin2)
 	// step3 ：价格到达变动范围时调整仓位,循环到结束信号传入
-	// TODO: 设定到达一段时间后平衡仓位
+
 	for {
+		// 每过一分钟检查一次仓位
+		time.Sleep(1 * time.Minute)
 		// 查询最新价格
 		latestPrice, err := strconv.ParseFloat(market.Price(coinPair).Price, 32)
 		if err != nil {
@@ -55,6 +62,7 @@ func BalancedPosition(coin1, coin2 string) {
 		latestPosition = latestPrice * free
 		// step 4: 将持仓coin换算成cash多的取出来少的添进去
 		balancePosition(latestPrice, latestPosition, accountBalance, coinPair)
+
 	}
 }
 
@@ -94,7 +102,8 @@ func balancePosition(latestPrice, latestPosition, accountBalance float64, coinPa
 		quantity := strconv.FormatFloat(calculateQuantity(accountBalance, latestPosition, latestPrice), 'e', 5, 32)
 		fee, _ := strconv.ParseFloat(wallet.TradeFee(coinPair).MakerCommission, 64)
 		trailingDelta := strconv.FormatFloat(fee*10000*4, 'e', 5, 32)
-		spot.TrailingDeltaOrder(coinPair, enum.Order.Sell, enum.OrderTypes.TakeProfitLimit, enum.TimeInForces.GTC, quantity, price, trailingDelta)
+		orderInfo := spot.TrailingDeltaOrder(coinPair, enum.Order.Sell, enum.OrderTypes.TakeProfitLimit, enum.TimeInForces.GTC, quantity, price, trailingDelta)
+		db.Create(orderInfo)
 	case latestPosition < accountBalance:
 		price := market.Price(coinPair).Price
 		quantity := strconv.FormatFloat(calculateQuantity(accountBalance, latestPosition, latestPrice), 'e', 5, 32)

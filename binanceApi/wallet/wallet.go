@@ -87,7 +87,7 @@ func GetFundingAsset(asset string) Asset {
 	url := setting.AppSetting.Url + "/sapi/v1/asset/get-funding-asset"
 	a := r.Post(url, strings.NewReader(data))
 	var as Asset
-	common.JsonStringToStruct(a, &as)
+	common.JsonStringToStruct(a, as)
 	return as
 }
 

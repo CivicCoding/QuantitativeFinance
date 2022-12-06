@@ -26,7 +26,7 @@ func HandleResponse(resp *http.Response) string {
 		fmt.Println("Something wrong with HandleResponse", err)
 		os.Exit(1)
 	}
-
+	//defer resp.Body.Close()
 	s := string(b[:])
 	return s
 }

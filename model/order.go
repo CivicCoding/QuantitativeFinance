@@ -1,5 +1,7 @@
 package model
 
+import "QuantitativeFinance/dbService"
+
 type OrderInfo struct {
 	Symbol              string `json:"symbol"`              // 交易对
 	OrderId             int    `json:"orderId"`             // 系统的订单ID
@@ -28,5 +30,6 @@ type Fill struct {
 }
 
 func InitOrder() {
-
+	dbService.GetDB().CreateTable(&OrderInfo{})
+	dbService.GetDB().CreateTable(&Fill{})
 }

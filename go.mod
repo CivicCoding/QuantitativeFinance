@@ -3,6 +3,7 @@ module QuantitativeFinance
 go 1.19
 
 require (
+	github.com/GoAdminGroup/go-admin v1.2.24 // indirect
 	github.com/fatih/color v1.13.0 // indirect
 	github.com/go-ini/ini v1.67.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect

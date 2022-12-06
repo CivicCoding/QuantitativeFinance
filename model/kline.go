@@ -1,7 +1,6 @@
 package model
 
 import (
-	"QuantitativeFinance/dbService"
 	"time"
 )
 
@@ -31,8 +30,8 @@ type KlineCtl struct{}
 
 // Insert 插入
 func (k *KlineCtl) Insert(value []Kline) {
-	DB := dbService.InitDB()
-	for _, item := range value {
-		DB.Create(&item)
-	}
+	//DB := dbService.InitDB()
+	//for _, item := range value {
+	//	DB.Create(&item)
+	//}
 }
